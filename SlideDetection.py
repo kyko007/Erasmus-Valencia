@@ -60,13 +60,13 @@ img = cv2.imread('3 (1).jpg')
 height, width, channels = img.shape
 DetectorFactory.seed = 0
 d = pytesseract.image_to_data(img, output_type=Output.DICT)
-n_boxes = len(d['level'])
+numberBoxes = len(d['level'])
 
 #Merge bounding boxes from the same block
 #This solves the overlapping
 rectangles = [[0 for i in range(4)] for y in range(1000)] 
 
-for i in range(n_boxes):
+for i in range(numberBoxes):
     (x, y, w, h) = (d['left'][i], d['top'][i], d['width'][i], d['height'][i])
     
     if x == 0 and y == 0:
@@ -77,7 +77,7 @@ for i in range(n_boxes):
             rectangles[d['block_num'][i]] = (x, y, w, h)
 
 #Draw the rectangles on the image
-for i in range(n_boxes):
+for i in range(numberBoxes):
     (x, y, w, h) = rectangles[i]
     cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
@@ -86,31 +86,31 @@ cv2.imshow('img', img)
 cv2.waitKey(0)
 
 #Merge the text in only one string
-ok = 0
-x = ""
-y = []
-for i in range(n_boxes):
-    ok = 0
+noLastElement = 0
+mergedText = ""
+listMergedText = []
+for i in range(numberBoxes):
+    noLastElement = 0
     if d['block_num'][i] != d['block_num'][i - 1] and i > 0:
-        if x.startswith(' '):
-            x = x[1:]
-        y.append(x)
-        x = ""
-        ok = 1
+        if mergedText.startswith(' '):
+            mergedText = mergedText[1:]
+        listMergedText.append(mergedText)
+        mergedText = ""
+        noLastElement = 1
     else:
-        if x.endswith(' '):
-            x += d['text'][i]
+        if mergedText.endswith(' '):
+            mergedText += d['text'][i]
         else:
-            x += ' ' + d['text'][i]
+            mergedText += ' ' + d['text'][i]
             
-if ok == 0:
-    y.append(x)
+if noLastElement == 0:
+    listMergedText.append(mergedText)
 
 #Use SpaCy to compute perplexity for each word
 #A better trained nlp for these domain would improve the results
 
 nlp = spacy.load('es_core_news_md')
-i = 0
+id = 0
 textArea = 1
 imageArea = 1
 nrTextBoxes = 0
@@ -120,12 +120,12 @@ nrImageBoxes = 0
 latin = ["es", "ca", "fr", "it", "lt", "pt", "ro", "en"]
 
 #Use SpaCy + langdetect to see if a box is an image or a text
-for s in y:
+for s in listMergedText:
     isText = 0
-    area = rectangles[i][2] * rectangles[i][3]
-    i += 1
+    area = rectangles[id][2] * rectangles[id][3]
+    id += 1
     doc = nlp(s)
-    print(doc.text)
+
     for token in doc:
        try:
            checker = 0
@@ -139,23 +139,17 @@ for s in y:
                checker += 1
            if checker == 2:
                isText += 1
-          
-           print(token.text, s1, token.prob)
            
        except:
-          print(token.text, "word not detected", token.prob)
           if token.prob < -3: #threshold for punctuation perplexity
               isText -= 1
     if isText <= 0:
         imageArea += area
         nrImageBoxes += 1
-        print("Was image")
-        print(area)
     else:
         textArea += area
         nrTextBoxes += 1
-        print("Was text")
-        print(area)
+       
 
 #The percetages are computed from the whole area detected, 
 #not the whole picture
