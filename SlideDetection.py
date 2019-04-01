@@ -16,11 +16,13 @@ from langdetect import DetectorFactory
 #detector.setModelTypeAsRetinaNet()
 #detector.setModelPath( os.path.join(execution_path , "resnet50_coco_best_v2.1.0.h5"))
 #detector.loadModel()
-#detections = detector.detectObjectsFromImage(input_image=os.path.join(execution_path , "1.jpg"), output_image_path=os.path.join(execution_path , "imagenew.jpg"), minimum_percentage_probability=72)
+#detections = detector.detectObjectsFromImage(input_image=os.path.join(execution_path , "1.jpg"), 
+#             output_image_path=os.path.join(execution_path , "imagenew.jpg"), 
+#             minimum_percentage_probability=72)
 #
 #for eachObject in detections:
 #    if eachObject["percentage_probability"] > 70:
-#        print(eachObject["name"] , " : " , eachObject["percentage_probability"] )
+#        print(eachObject["name"] , " : " , eachObject["percentage_probability"])
 #    
 
 # load the image and resize it to a smaller factor so that
